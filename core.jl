@@ -24,7 +24,6 @@ struct FLewMonoid{N}
     o::Vector{Int}
     
     function FLewMonoid{N}(o::Vector{Int}) where {N}
-        
         new{N}(o)
     end
 end
@@ -65,20 +64,51 @@ function evaluate(fm::FLewMonoid{N}, a::Int, b::Int) where {N}
     fm.o[(N-2)*(a-1)+b-(a*(a-1))÷2]
 end
 
-function weaklyincreasing(seq::Vector{Int},min::Int,n::Int,l::Int)
+function weaklyincreasing(q, seq::Vector{Int}, min::Int, n::Int, l::Int)
     if l == 1
         for i in min:n-1
-            push!(seq,i)
-            println(seq)
+            push!(seq, i)
+            push!(q, copy(seq))
             pop!(seq)
         end
+        return q
     else
         for i in min:n-1
-            push!(seq,i)
-            weaklyincreasing(seq,i,n,l-1)
+            push!(seq, i)
+            weaklyincreasing(q, seq, i, n, l-1)
             pop!(seq)
         end
+        return q
     end
 end
 
-weaklyincreasing(n::Int,l::Int) = weaklyincreasing(Vector{Int}(),0,n,l)
+
+weaklyincreasing(min::Int, n::Int,l::Int) = weaklyincreasing([], Vector{Int}(), min, n, l)
+weaklyincreasing(n::Int,l::Int) = weaklyincreasing([], Vector{Int}(), 0, n, l)
+
+function generateflewchain(q, o, min, n, l)
+    if l == 1
+        wi = weaklyincreasing(last(o), n, l)
+        for i in wi
+            push!(q, vcat(o, i))
+        end
+        return q    
+    else
+            wi = weaklyincreasing(min, n, l)
+            for i in wi
+                iswi = true
+                if l != n-2
+                    for j in 1:length(i)
+                        if reverse(i)[j] < reverse(o)[j]
+                            iswi = false
+                            break
+                        end
+                    end
+                end
+                iswi && generateflewchain(q, vcat(o, i), i[1], n, l-1)
+            end
+            return q
+        end
+end
+
+generateflewchain(n, l) = generateflewchain([], Vector{Int}(), 0, n, l)
