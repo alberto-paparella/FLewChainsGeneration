@@ -72,18 +72,13 @@ function evaluate(fm::FLewMonoid{N}, a::Int, b::Int) where {N}
     a < b ? fm.o[(N-2)*(a-1)+b-(a*(a-1))÷2] : fm.o[(N-2)*(b-1)+a-(b*(b-1))÷2]
 end
 
-function weaklyincreasing(q, seq::Vector{Int}, min::Int, n::Int, l::Int)
-    if l == 1
-        for i in min:n-1
-            push!(seq, i)
-            push!(q, copy(seq))
-            pop!(seq)
-        end
-        return q
+function weaklyincreasing(q, seq::Vector{Int}, min::Int, max::Int, l::Int)
+    if l == 0
+        push!(q, copy(seq))
     else
-        for i in min:n-1
+        for i in min:max
             push!(seq, i)
-            weaklyincreasing(q, seq, i, n, l-1)
+            weaklyincreasing(q, seq, i, max, l-1)
             pop!(seq)
         end
         return q
@@ -91,21 +86,19 @@ function weaklyincreasing(q, seq::Vector{Int}, min::Int, n::Int, l::Int)
 end
 
 
-weaklyincreasing(min::Int, n::Int,l::Int) = weaklyincreasing([], Vector{Int}(), min, n, l)
-weaklyincreasing(n::Int,l::Int) = weaklyincreasing([], Vector{Int}(), 0, n, l)
+weaklyincreasing(min::Int, max::Int, l::Int) = weaklyincreasing(Vector{Vector{Int}}(), Vector{Int}(), min, max, l)
 
-function generateflewchain(q::Vector{Vector{Int}}, o::Vector{Int}, min::Int, n::Int, l::Int)
+function generateflewchain(q::Vector{Vector{Int}}, o::Vector{Int}, min::Int, max::Int, l::Int)
+    wi = weaklyincreasing(min, max, l) 
     if l == 1
-        wi = weaklyincreasing(min, n, l)
         for i in wi
             push!(q, vcat(o, i))
         end
-        return q    
     else
-        wi = weaklyincreasing(min, n, l)
+        wi = weaklyincreasing(min, max, l)
         for i in wi
             iswi = true
-            if l != n-2
+            if !isempty(o)
                 for j in 1:length(i)
                     if reverse(i)[j] < reverse(o)[j]
                         iswi = false
@@ -113,15 +106,16 @@ function generateflewchain(q::Vector{Vector{Int}}, o::Vector{Int}, min::Int, n::
                     end
                 end
             end
-            iswi && generateflewchain(q, vcat(o, i), i[2], n, l-1)
+            iswi && generateflewchain(q, vcat(o, i), i[2], max+1, l-1)
         end
-        return q
     end
 end
 
 function generateflewchain(n)
-    n < 3 && return Vector{Vector{Int}}()
-    generateflewchain(Vector{Vector{Int}}(), Vector{Int}(), 0, n, n-2)
+    q = Vector{Vector{Int}}()
+    n < 3 && return q
+    generateflewchain(q, Vector{Int}(), 0, 1, n-2)
+    return q
 end
 
 function evaluate(o::Vector{Int}, a::Int, b::Int, n::Int)
@@ -145,4 +139,12 @@ function checkassociativity(o::Vector{Int}, n::Int)
         Δ != ∇ && return false
     end
     return true
+end
+
+function generateflewchains(n)
+    if n < 3
+        FLewMonoid{n}()
+    else
+        FLewMonoid{n}.([filter(x -> checkassociativity(x, n)==1, generateflewchain(n))...])
+    end
 end
