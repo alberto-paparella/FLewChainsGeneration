@@ -155,7 +155,7 @@ end
 
 function generateflewchains(n::Int)
     if n < 3
-        FiniteFLewChain{n}()
+        [FiniteFLewChain{n}()]
     else
         # FiniteFLewChain{n}.([filter(x -> checkassociativity(x, n)==1, generateflewchain(n))...])
         FiniteFLewChain{n}.([generateflewchain(n)...])
