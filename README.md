@@ -41,3 +41,21 @@ julia> for i in q
            Base.run(`clear`)
        end
 ```
+
+Note that if you launched the julia command-line interface with the `-t` option, the generated finite FLew-chains are not stored in order.
+
+## Results
+
+| Values | FLew-chains |
+|--------|-------------|
+| 1      | 1           |
+| 2      | 1           |
+| 3      | 2           |
+| 4      | 6           |
+| 5      | 22          |
+| 6      | 94          |
+| 7      | 451         |
+| 8      | 2386        |
+| 9      | 12775       |
+| 10     | 86417       |
+
